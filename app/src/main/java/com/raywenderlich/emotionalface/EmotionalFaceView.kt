@@ -6,15 +6,61 @@ import android.util.AttributeSet
 import android.view.View
 
 class EmotionalFaceView(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
-    private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-    private var faceColor = Color.YELLOW
-    private var eyesColor = Color.BLACK
-    private var mouthColor = Color.BLACK
-    private var borderColor = Color.BLACK
-    private var borderWidth = 4.0f
-    private var size = 320
+    companion object {
+        private const val DEFAULT_FACE_COLOR = Color.YELLOW
+        private const val DEFAULT_EYES_COLOR = Color.BLACK
+        private const val DEFAULT_MOUTH_COLOR = Color.BLACK
+        private const val DEFAULT_BORDER_COLOR = Color.BLACK
+        private const val DEFAULT_BORDER_WIDTH = 4.0f
 
+        const val HAPPY = 0L
+        const val SAD = 1L
+    }
+
+    private var faceColor = DEFAULT_FACE_COLOR
+    private var eyesColor = DEFAULT_EYES_COLOR
+    private var mouthColor = DEFAULT_MOUTH_COLOR
+    private var borderColor = DEFAULT_BORDER_COLOR
+    private var borderWidth = DEFAULT_BORDER_WIDTH
+
+    private val paint = Paint()
     private val mouthPath = Path()
+    private var size = 0
+
+    var happinessState = HAPPY
+        set(state) {
+            field = state
+            invalidate()
+        }
+
+    init {
+        paint.isAntiAlias = true
+        setupAttributes(attrs)
+    }
+
+    private fun setupAttributes(attrs: AttributeSet?) {
+        val typedArray = context.theme.obtainStyledAttributes(
+            attrs, R.styleable.EmotionalFaceView,
+            0, 0
+        )
+
+        happinessState =
+            typedArray.getInt(R.styleable.EmotionalFaceView_state, HAPPY.toInt()).toLong()
+        faceColor = typedArray.getColor(R.styleable.EmotionalFaceView_faceColor, DEFAULT_FACE_COLOR)
+        eyesColor = typedArray.getColor(R.styleable.EmotionalFaceView_eyesColor, DEFAULT_EYES_COLOR)
+        mouthColor =
+            typedArray.getColor(R.styleable.EmotionalFaceView_mouthColor, DEFAULT_MOUTH_COLOR)
+        borderColor = typedArray.getColor(
+            R.styleable.EmotionalFaceView_borderColor,
+            DEFAULT_BORDER_COLOR
+        )
+        borderWidth = typedArray.getDimension(
+            R.styleable.EmotionalFaceView_borderWidth,
+            DEFAULT_BORDER_WIDTH
+        )
+
+        typedArray.recycle()
+    }
 
     override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
@@ -63,4 +109,10 @@ class EmotionalFaceView(context: Context?, attrs: AttributeSet?) : View(context,
         canvas?.drawCircle(size / 2f, size / 2f, radius - borderWidth / 2f, paint)
     }
 
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+
+        size = Math.min(measuredWidth, measuredHeight)
+        setMeasuredDimension(size, size)
+    }
 }
